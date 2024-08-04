@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,6 +9,8 @@ import {
 import prisma from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import clsx from "clsx";
+import Link from "next/link";
+import { deleteTask } from "@/actions/actions";
 
 export default async function Home() {
   const tasks = await prisma.task.findMany();
@@ -36,8 +38,16 @@ export default async function Home() {
             </span>
           </CardContent>
           <CardFooter className="flex justify-end gap-x-2">
-            <Button variant={"destructive"}>Delete</Button>
-            <Button>Edit</Button>
+            <form action={deleteTask}>
+              <input type="hidden" name="id" defaultValue={task?.id}/>
+              <Button variant={"destructive"} type="submit">Delete</Button>
+            </form>
+            <Link
+              href={`/update/${task.id}`}
+              className={buttonVariants({ variant: "secondary" })}
+            >
+              Edit
+            </Link>
           </CardFooter>
         </Card>
       ))}

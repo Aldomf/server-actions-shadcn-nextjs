@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -19,37 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import prisma from "@/lib/prisma";
-import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Task } from "@prisma/client";
+import { createTask, updateTask } from "@/actions/actions";
 
-export function CardWithForm() {
-  async function createTask(formData: FormData) {
-    "use server";
-
-    const rawFormData = {
-      title: formData.get("title") as string | null,
-      description: formData.get("description") as string | null,
-      priority: formData.get("priority") as string | null,
-    };
-
-    if (!rawFormData.title || !rawFormData.priority) {
-      throw new Error("Title and priority are required.");
-    }
-
-    const newTask = await prisma.task.create({
-      data: {
-        title: rawFormData.title,
-        description: rawFormData.description ?? "",
-        priority: rawFormData.priority,
-      },
-    });
-
-    console.log(newTask);
-    redirect("/");
-  }
+export function CardWithForm({ task }: { task?: Task }) {
+  const actionTask = task ? updateTask : createTask;
 
   return (
-    <form action={createTask}>
+    <form action={actionTask}>
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle>Create task</CardTitle>
@@ -58,8 +36,14 @@ export function CardWithForm() {
         <CardContent>
           <div className="grid w-full items-center gap-4">
             <div className="flex flex-col space-y-1.5">
+              {task && <input type="hidden" name="id" defaultValue={task?.id} />}
               <Label htmlFor="title">Title</Label>
-              <Input id="title" placeholder="Title" name="title" />
+              <Input
+                id="title"
+                placeholder="Title"
+                name="title"
+                defaultValue={task?.title}
+              />
             </div>
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="description">Description</Label>
@@ -67,11 +51,12 @@ export function CardWithForm() {
                 id="description"
                 placeholder="Description"
                 name="description"
+                defaultValue={task?.description ?? ""}
               />
             </div>
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="priority">Priority</Label>
-              <Select name="priority">
+              <Select name="priority" defaultValue={task?.priority}>
                 <SelectTrigger id="priority">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
@@ -86,8 +71,10 @@ export function CardWithForm() {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline">Cancel</Button>
-          <Button>Create</Button>
+          <Link href="/" className={buttonVariants({ variant: "outline" })}>
+            Cancel
+          </Link>
+          <Button>{task ? "Update" : "Create"}</Button>
         </CardFooter>
       </Card>
     </form>
